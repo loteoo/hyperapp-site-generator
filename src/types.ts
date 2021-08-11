@@ -10,6 +10,7 @@ export interface Options {
 }
 
 export interface Config {
+  node?: string;
   routes: Record<string, Promise<any> | any>;
   options?: Options;
   init: Record<string, any>;

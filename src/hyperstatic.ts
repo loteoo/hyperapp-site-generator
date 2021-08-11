@@ -11,7 +11,7 @@ import { Config, LocationState, Options, State } from './types';
 
 
 
-const hyperstatic = ({ routes, options: userOptions, init, view, subscriptions = (_s) => [], ...rest }: Config) => {
+const hyperstatic = ({ node, routes, options: userOptions, init, view, subscriptions = (_s) => [], ...rest }: Config) => {
 
   const options: Options = {
     eagerLoad: true,
@@ -100,7 +100,7 @@ const hyperstatic = ({ routes, options: userOptions, init, view, subscriptions =
     init: initAction,
     view: (state) => provide(
       { state, meta, options, getLocation, PreloadPage },
-      h('div', { id: 'hyperstatic' }, view(state))
+      h('div', { id: node ? node : 'hyperstatic' }, view(state))
     ),
     subscriptions: (state) => [
       ...subscriptions(state),
@@ -112,7 +112,7 @@ const hyperstatic = ({ routes, options: userOptions, init, view, subscriptions =
         action: PreloadPage
       })
     ],
-    node: document.getElementById('hyperstatic'),
+    node: document.getElementById(node ? node : 'hyperstatic'),
   })
 }
 
