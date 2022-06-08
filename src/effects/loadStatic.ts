@@ -1,47 +1,39 @@
-import { Action } from 'hyperapp';
-import SetPathStatus from '../actions/SetPathStatus';
-import { State } from '../types';
+import InitializePath from '../actions/InitializePath';
+import { LocationState } from '../types';
 
 interface LoadStaticArgs {
-  loader: () => any | Promise<any>;
-  action: Action<any>;
-  error: Action<any>;
+  bundle: any;
+  location: LocationState;
+  data: (location: LocationState) => any | Promise<any>;
 }
 
 /**
  * Effect runner for the loadStatic effect
  *
- * The loadStatic effect, at build time, will cache the data returned from the `loader` promise
+ * The loadStatic effect, at build time, will cache the data returned from the `data` promise
  * and save it as a JSON file in the build files.
  *
  * At runtime, it will fetch the pre-saved JSON instead of running the promise
  */
-const loadStaticRunner = async (dispatch, { path, loader, action, error }: LoadStaticArgs & { path: string }) => {
-  try {
+const loadStaticRunner = async (dispatch, { location, data, bundle }: LoadStaticArgs) => {
 
-    // @ts-ignore
-    const cachedUrl = window?.HYPERSTATIC_DATA?.cache[path]
+  // @ts-ignore
+  const promise = import.meta.env.MODE === 'production'
+    ? fetch(`${location.path}/data.json`).then(res => res.json())
+    : data(location);
 
-    const promise = cachedUrl
-      ? fetch(cachedUrl).then(res => res.json())
-      : loader()
+  const result = await promise;
 
-    const data = await promise;
 
-    // @ts-expect-error
-    if (window.cacheData) {
-      // @ts-expect-error
-      window.cacheData(path, data)
+  window.HYPERSTATIC_DATA = {
+    ...window?.HYPERSTATIC_DATA,
+    [location.path]: {
+      data: result
     }
-
-    dispatch((state: State) => action(SetPathStatus(state, { path, status: 'ready' }), data))
-  } catch (err) {
-    dispatch(error, err)
-    throw err
   }
-}
 
-loadStaticRunner.fxName = 'loadStatic';
+  dispatch(InitializePath, { location, bundle });
+}
 
 const loadStatic = (args: LoadStaticArgs) => [loadStaticRunner, args]
 

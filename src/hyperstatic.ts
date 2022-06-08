@@ -1,4 +1,4 @@
-import { app, h } from 'hyperapp'
+import { h } from 'hyperapp'
 import { match } from "path-to-regexp";
 import InitializePath from './actions/InitializePath';
 import SetPathStatus from './actions/SetPathStatus';
@@ -7,16 +7,46 @@ import onLinkEnteredViewPort from './subscriptions/onLinkEnteredViewPort';
 import onRouteChanged from './subscriptions/onRouteChanged';
 import parseQueryString from './utils/parseQueryString';
 import provide from './utils/provide'
+import Router from './components/Router';
 import { Config, LocationState, Options, State } from './types';
+import updateHead from './effects/updateHead';
 
+const defaultEagerLoad = () => {
+  if (typeof window !== 'undefined') {
+    let connection = navigator?.connection as any;
+    if (connection) {
+      // Check if data-saver is enabled
+      if (connection.saveData) {
+        return false
+      }
+      // Check if connection is slow
+      if (/2g/.test(connection.effectiveType)) {
+        return false
+      }
+    }
+  }
+  return true
+}
 
+const hyperstatic = async ({
+    init = (state) => state,
+    view = () => Router() as any,
+    node = typeof window !== 'undefined' ? document.body : { nodeName: 'body' } as Node,
+    subscriptions = () => [],
+    dispatch,
 
-const hyperstatic = ({ routes, options: userOptions, init, view, subscriptions = (_s) => [], ...rest }: Config) => {
+    head,
+    data: getData,
+    routes = {},
+    options: _options = {},
+  }: Config) => {
 
   const options: Options = {
-    eagerLoad: true,
-    ...userOptions
+    eagerLoad: 'auto',
+    ..._options
   }
+
+  const shouldEagerLoad = options.eagerLoad === 'auto' ? defaultEagerLoad() : options.eagerLoad;
 
   // Internal values saved for each routes
   const meta = Object.keys(routes).reduce((obj, route) => {
@@ -26,7 +56,7 @@ const hyperstatic = ({ routes, options: userOptions, init, view, subscriptions =
       bundle: null
     }
     return obj
-  }, {})
+  }, {});
 
   // Utility function to parse data from paths
   const getLocation = (pathname: string): LocationState => {
@@ -51,12 +81,12 @@ const hyperstatic = ({ routes, options: userOptions, init, view, subscriptions =
 
   // Preload page Action
   const PreloadPage = (state: State, href: string) => {
-    const location = getLocation(href)
-    const { route, path } = location
+    const location = getLocation(href);
+    const { route, path } = location;
 
     // If invalid path (404)
     if (!route) {
-      return SetPathStatus(state, { path, status: 'error' })
+      return SetPathStatus(state, { path, status: 'error' });
     }
 
     const bundle = meta[route]?.bundle;
@@ -65,55 +95,73 @@ const hyperstatic = ({ routes, options: userOptions, init, view, subscriptions =
     if (!bundle) {
       return [
         SetPathStatus(state, { path, status: 'loading' }),
-        loadRouteBundle({ route, path, meta, location })
+        loadRouteBundle({ location, meta })
       ]
     }
 
-    return InitializePath(state, { location, bundle })
+    return InitializePath(state, { location, bundle });
   }
 
   // Location changed action
   const LocationChanged = ({ location: _, ...state }: State, pathname: string) => {
     const location = getLocation(pathname)
     const nextState = { location, ...state }
-    return PreloadPage(nextState, pathname)
+    return PreloadPage(nextState, pathname);
   }
 
-  const initialPath = window.location.pathname + window.location.search;
-
-  let initialState = Array.isArray(init) ? init[0] : init;
-
-  initialState = {
-    ...initialState,
-    paths: {},
-  } as State;
-
-  let initAction = LocationChanged(initialState, initialPath);
-
-  if (Array.isArray(init)) {
-    const effects = init.slice(1)
-    initAction = Array.isArray(initAction) ? initAction.concat(effects) : [initAction, ...effects]
+  const initialPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/';
+  
+  let data;
+  if (getData) {
+    if (typeof window !== 'undefined' && window?.HYPERSTATIC_DATA?.global) {
+      data = window?.HYPERSTATIC_DATA?.global;
+    } else {
+      data = await getData();
+    }
   }
 
-  return app({
-    ...rest,
+  const initialInternalState = { paths: {} } as State;
+  let initAction = LocationChanged(initialInternalState, initialPath);
+  initAction = Array.isArray(initAction) ? initAction : [initAction];
+
+  let userInitAction = init(initAction[0], data);
+  const [userInitedState, ...fxs] = Array.isArray(userInitAction) ? userInitAction : [userInitAction];
+
+  initAction[0] = userInitedState;
+  initAction.push(...fxs);
+
+  return {
+
+    // hyperapp
     init: initAction,
     view: (state) => provide(
       { state, meta, options, getLocation, PreloadPage },
-      h('div', { id: 'hyperstatic' }, view(state))
+      h(node.nodeName.toLowerCase(), {}, view(state))
     ),
-    subscriptions: (state) => [
+    subscriptions: (state: State) => [
       ...subscriptions(state),
       onRouteChanged({
         action: LocationChanged
       }),
-      options.eagerLoad && onLinkEnteredViewPort({
+      shouldEagerLoad && onLinkEnteredViewPort({
         selector: 'a[data-status=iddle]',
         action: PreloadPage
-      })
+      }),
+      updateHead(head, meta, state)
     ],
-    node: document.getElementById('hyperstatic'),
-  })
+    node,
+    dispatch,
+
+    // hyperstatic
+    head,
+    data,
+    routes,
+    options,
+
+    meta,
+    LocationChanged,
+    SetPathStatus,
+  } as any
 }
 
 export default hyperstatic

@@ -1,3 +1,6 @@
+import { Effect } from "hyperapp";
+import { State } from "../types";
+
 interface NavigateArgs {
   to: string;
   delay?: number;
@@ -21,6 +24,6 @@ const navigateRunner = (dispatch, { to, delay = 0 }: NavigateArgs) => {
   }, delay)
 }
 
-const navigate = (args: NavigateArgs) => [navigateRunner, args]
+const navigate = (args: NavigateArgs): Effect<State, NavigateArgs> => [navigateRunner, args]
 
 export default navigate

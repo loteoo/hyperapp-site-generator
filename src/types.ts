@@ -1,20 +1,32 @@
-type Action<T> = (state: State, args: T) => State | Array<any>
+import { Dispatch, Action, Subscription, VNode, Dispatchable } from 'hyperapp';
+
+type EmptyState = Record<string, any>;
+
+export interface State extends EmptyState {
+  location: LocationState;
+  paths: Record<string, PathStatus>;
+}
 
 export interface Options {
   baseUrl?: string;
-  loader?: (state: State) => any
-  notFound?: (state: State) => any
-  fastClicks?: boolean
-  eagerLoad?: boolean
-  navigationDelay?: number
+  fastClicks?: boolean;
+  eagerLoad?: boolean | 'auto';
+  navigationDelay?: number;
 }
 
 export interface Config {
-  routes: Record<string, Promise<any> | any>;
+  // Hyperapp options
+  init?: (state: State, data: any) => Dispatchable<EmptyState>;
+  view?: (state: State) => VNode<State>;
+  node?: Node;
+  subscriptions?: (state: State) => (boolean | undefined | Subscription<State>)[];
+  dispatch?: (dispatch: Dispatch<State>) => Dispatch<State>;
+
+  // Hyperstatic options
+  head?: (state: State) => VNode<State>;
+  data?: () => Promise<any>;
+  routes?: Record<string, Promise<VNode<State> | any>>;
   options?: Options;
-  init: Record<string, any>;
-  view: (state: State) => any;
-  subscriptions?: (state: State) => any[];
 }
 
 export interface LocationState {
@@ -26,19 +38,14 @@ export interface LocationState {
 
 export type PathStatus = 'iddle' | 'loading' | 'fetching' | 'ready' | 'error';
 
-export interface State {
-  location: LocationState;
-  paths: Record<string, PathStatus>;
-  [x: string]: any;
-}
 
 export interface ViewContext {
   state: State
   options: Options
   meta: any
   getLocation: (path: string) => LocationState
-  PreloadPage: Action<string>
-  LocationChanged: Action<string>
+  PreloadPage: Action<State, string>
+  LocationChanged: Action<State, string>
 }
 
 export interface PathInfo extends LocationState {

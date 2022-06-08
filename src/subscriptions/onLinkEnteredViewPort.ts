@@ -1,6 +1,6 @@
 import { Action } from 'hyperapp';
 
-let observer = new IntersectionObserver(
+let observer = typeof window !== 'undefined' ? new IntersectionObserver(
   (entries, observer) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -14,7 +14,7 @@ let observer = new IntersectionObserver(
   {
     threshold: 0.5
   }
-);
+) : null;
 
 const subRunner = (dispatch, action) => {
   const handleLinkEnteredViewport = (ev) => {
@@ -23,6 +23,7 @@ const subRunner = (dispatch, action) => {
   addEventListener('linkenteredviewport', handleLinkEnteredViewport)
   return () => {
     removeEventListener('linkenteredviewport', handleLinkEnteredViewport)
+    observer?.disconnect();
   }
 }
 
@@ -43,11 +44,11 @@ const onLinkEnteredViewPort = ({
   // After each render
   setTimeout(() => {
     requestAnimationFrame(() => {
-
-      // TODO: research if having the same element observed many times is an issue and how to avoid this
-      document.querySelectorAll(selector).forEach(link => {
-        observer.observe(link)
-      });
+      requestIdleCallback(() => {
+        document.querySelectorAll(selector).forEach(link => {
+          observer?.observe(link)
+        });
+      })
     })
   });
 

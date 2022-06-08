@@ -1,5 +1,4 @@
 import { h, text } from "hyperapp";
-import PreventDefault from "../actions/PreventDefault";
 import navigate from "../effects/navigate";
 import { PathInfo, State, ViewContext } from '../types';
 
@@ -68,7 +67,7 @@ const Link = ({ href, ...rest }: LinkProps, children) => ({
       "a",
       {
         href,
-        onclick: PreventDefault,
+        // onclick: PreventDefault,
         [navigateEventName]: DumbNavigate,
         "aria-current": active,
         ...rest,
@@ -78,7 +77,7 @@ const Link = ({ href, ...rest }: LinkProps, children) => ({
   }
 
   // @ts-expect-error
-  if (window.registerPath) {
+  if (typeof window !== 'undefined' && window.registerPath) {
     // @ts-expect-error
     window.registerPath(path);
   }
@@ -101,7 +100,7 @@ const Link = ({ href, ...rest }: LinkProps, children) => ({
     "a",
     {
       href,
-      onclick: PreventDefault,
+      // onclick: PreventDefault,
       [navigateEventName]: RequestNavigation,
       onmouseover: PreloadPageHandler,
       onfocus: PreloadPageHandler,

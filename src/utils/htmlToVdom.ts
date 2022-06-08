@@ -1,5 +1,7 @@
 import { h, text } from 'hyperapp'
 
+const EMPTY_OBJ = {};
+
 /**
  * Html to hyperapp VDOM converter
  * Someone should make this a package...
@@ -16,29 +18,19 @@ const mapProps = attrs => (
   )
 )
 
-const mapChildren = (childNodes) => {
-  if (!!childNodes && childNodes.length > 0) {
-    return [...childNodes].map(node => mapVNode(node))
-  } else {
-    return []
-  }
-}
+const htmlToVdom = (html, hydrate = false) => {
 
-const mapVNode = (node) => {
-  switch (node.nodeType) {
-    case Node.TEXT_NODE:
-      return text(node.nodeValue)
-    case Node.ELEMENT_NODE:
-      return h(node.tagName, mapProps(node.attributes), mapChildren(node.childNodes))
-    default:
-      throw new Error(`${node.nodeType} is not supported`)
-  }
-}
+  const mapChildren = (childNodes) => [...childNodes]
+    .map(node => mapVNode(node))
 
-const htmlToVdom = (html) => {
+  const mapVNode = (node) => node.nodeType === Node.TEXT_NODE
+    ? text(node.nodeValue)
+    : h(node.nodeName.toLowerCase(), hydrate ? EMPTY_OBJ : mapProps(node.attributes), mapChildren(node.childNodes))
+
+
   const parser = new DOMParser()
   const doc = parser.parseFromString(html, 'text/html')
-  const node = mapVNode(doc.body)
+  const node = mapVNode(html.startsWith('<head') ? doc.head : doc.body)
   return node.children
 }
 

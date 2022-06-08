@@ -1,7 +1,12 @@
-import { h, text } from 'hyperapp'
+import { h, text, VNode } from 'hyperapp'
 import htmlToVdom from '../utils/htmlToVdom';
-import { ViewContext } from '../types';
+import { State, ViewContext } from '../types';
 import Link from './Link';
+
+interface Props {
+  loader?: (state: State) => VNode<State>;
+  notFound?: (state: State) => VNode<State>;
+}
 
 /**
  * Router component to import in user code.
@@ -9,16 +14,17 @@ import Link from './Link';
  * Renders the correct view depending on the location state
  *
  */
-const Router = () => ({ state, meta, options }: ViewContext) => {
-  const { route, path } = state.location
+const Router = (props: Props = {}) => ({ state, meta }: ViewContext): VNode<State> => {
+  const { route, path } = state.location;
+  const { loader, notFound } = props ?? {};
 
   // 404 Page
   if (!route) {
     // Display custom 404 page if specified
-    if (options.notFound && typeof options.notFound === 'function') {
+    if (notFound && typeof notFound === 'function') {
       return (
         h('div', { id: 'router-outlet' }, [
-          options.notFound(state)
+          notFound(state)
         ])
       )
     }
@@ -39,19 +45,6 @@ const Router = () => ({ state, meta, options }: ViewContext) => {
 
   if (view) {
     if (state.paths[path] === 'ready') {
-
-      // @ts-expect-error
-      if (window.pathRendered) {
-
-        // Wait after render
-        setTimeout(() => {
-          requestAnimationFrame(() => {
-            // @ts-expect-error
-            window.pathRendered(path)
-          })
-        });
-      }
-
       return (
         h('div', { id: 'router-outlet' }, [
           view(state)
@@ -61,17 +54,19 @@ const Router = () => ({ state, meta, options }: ViewContext) => {
   }
 
   // Check if a prerendered piece of HTML can be reused while JS / JSON loads
-  const previousOutlet = document.getElementById('router-outlet')
-  if (previousOutlet) {
-    const node = htmlToVdom(previousOutlet.innerHTML)
-    return h('div', { id: 'router-outlet' }, node);
+  if (typeof window !== 'undefined') {
+    const previousOutlet = document.getElementById('router-outlet')
+    if (previousOutlet) {
+      const node = htmlToVdom(previousOutlet.innerHTML)
+      return h('div', { id: 'router-outlet' }, node);
+    }
   }
 
   // Display custom loader if specified
-  if (options.loader && typeof options.loader === 'function') {
+  if (loader && typeof loader === 'function') {
     return (
       h('div', { id: 'router-outlet' }, [
-        options.loader(state)
+        loader(state)
       ])
     )
   }
