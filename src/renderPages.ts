@@ -30,6 +30,7 @@ const renderPages = async () => {
     .alias('e', 'entry')
     .describe('extra', 'Comma separated list of paths to render if they aren\'t automatically crawled')
     .alias('x', 'extra')
+    .describe('no-sandbox', 'Do not run puppeteer in a sandbox')
     .argv;
 
   // Get command line arguments with defaults
@@ -37,10 +38,11 @@ const renderPages = async () => {
   const distFolder = argv.dist ? String(argv.dist) : 'dist'
   const entryPoint = argv.entry ? String(argv.entry) : '/'
   const extraPages = typeof argv.extra === 'string' ? argv.extra.split(',') : []
+  const puppeteerArgs = argv.sandbox === false ? [ '--no-sandbox' ] : []
 
   try {
 
-    // Spin up a static server to use for prerendering with pupeteer
+    // Spin up a static server to use for prerendering with puppeteer
     await createStaticServer(port, distFolder)
 
     console.log('Rendering site...')
@@ -57,7 +59,7 @@ const renderPages = async () => {
       ...extraPages
     ]
 
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({ headless: true, args: puppeteerArgs });
     const page = await browser.newPage();
 
     await page.setUserAgent('puppeteer');
