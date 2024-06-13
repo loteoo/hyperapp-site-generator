@@ -8,7 +8,7 @@ import http from 'http'
 import events from 'events'
 import yargs from 'yargs'
 
-const createStaticServer = (port, distFolder) =>
+const createStaticServer = (port: number, distFolder: string) =>
   http.createServer((request, response) =>
     handler(request, response, {
       public: distFolder,
@@ -41,7 +41,7 @@ const renderPages = async () => {
   try {
 
     // Spin up a static server to use for prerendering with pupeteer
-    await createStaticServer(port, distFolder)
+    createStaticServer(port, distFolder)
 
     console.log('Rendering site...')
 
@@ -128,7 +128,7 @@ const renderPages = async () => {
 
     const cacheKeys = Object.keys(cache)
 
-    let cacheUrlArray = []
+    let cacheUrlArray: string[] = []
 
     for (let i = 0; i < cacheKeys.length; i++) {
       const key = cacheKeys[i]
