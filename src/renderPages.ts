@@ -33,10 +33,10 @@ const renderPages = async () => {
     .argv;
 
   // Get command line arguments with defaults
-  const port = argv.port ? Number(argv.port) : 54321
-  const distFolder = argv.dist ? String(argv.dist) : 'dist'
-  const entryPoint = argv.entry ? String(argv.entry) : '/'
-  const extraPages = typeof argv.extra === 'string' ? argv.extra.split(',') : []
+  const port = argv['port'] ? Number(argv['port']) : 54321
+  const distFolder = argv['dist'] ? String(argv['dist']) : 'dist'
+  const entryPoint = argv['entry'] ? String(argv['entry']) : '/'
+  const extraPages = typeof argv['extra'] === 'string' ? argv['extra'].split(',') : []
 
   try {
 
