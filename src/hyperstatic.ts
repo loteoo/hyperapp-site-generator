@@ -31,7 +31,7 @@ const hyperstatic = ({ routes, options: userOptions, init, view, subscriptions =
   // Utility function to parse data from paths
   const getLocation = (pathname: string): LocationState => {
     const [path, qs] = pathname.split('?')
-    let matchedRoute;
+    let matchedRoute: string | undefined;
     let params = {};
     for (const route of Object.keys(routes)) {
       const maybeMatch = meta[route].matcher(path)
@@ -112,7 +112,7 @@ const hyperstatic = ({ routes, options: userOptions, init, view, subscriptions =
         action: PreloadPage
       })
     ],
-    node: document.getElementById('hyperstatic'),
+    node: <Node>document.getElementById('hyperstatic')
   })
 }
 

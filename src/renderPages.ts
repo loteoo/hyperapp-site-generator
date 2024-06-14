@@ -1,4 +1,5 @@
-import puppeteer from 'puppeteer'
+import puppeteer from 'puppeteer-core'
+import chromium from '@sparticuz/chromium'
 import fse from 'fs-extra'
 import path from 'path'
 import crypto from 'crypto'
@@ -8,7 +9,7 @@ import http from 'http'
 import events from 'events'
 import yargs from 'yargs'
 
-const createStaticServer = (port, distFolder) =>
+const createStaticServer = (port: number, distFolder: string) =>
   http.createServer((request, response) =>
     handler(request, response, {
       public: distFolder,
@@ -33,15 +34,15 @@ const renderPages = async () => {
     .argv;
 
   // Get command line arguments with defaults
-  const port = argv.port ? Number(argv.port) : 54321
-  const distFolder = argv.dist ? String(argv.dist) : 'dist'
-  const entryPoint = argv.entry ? String(argv.entry) : '/'
-  const extraPages = typeof argv.extra === 'string' ? argv.extra.split(',') : []
+  const port = argv['port'] ? Number(argv['port']) : 54321
+  const distFolder = argv['dist'] ? String(argv['dist']) : 'dist'
+  const entryPoint = argv['entry'] ? String(argv['entry']) : '/'
+  const extraPages = typeof argv['extra'] === 'string' ? argv['extra'].split(',') : []
 
   try {
 
     // Spin up a static server to use for prerendering with pupeteer
-    await createStaticServer(port, distFolder)
+    createStaticServer(port, distFolder)
 
     console.log('Rendering site...')
 
@@ -57,7 +58,12 @@ const renderPages = async () => {
       ...extraPages
     ]
 
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless
+    });
     const page = await browser.newPage();
 
     await page.setUserAgent('puppeteer');
@@ -128,7 +134,7 @@ const renderPages = async () => {
 
     const cacheKeys = Object.keys(cache)
 
-    let cacheUrlArray = []
+    let cacheUrlArray: string[] = []
 
     for (let i = 0; i < cacheKeys.length; i++) {
       const key = cacheKeys[i]
