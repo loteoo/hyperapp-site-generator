@@ -1,4 +1,5 @@
 import puppeteer from 'puppeteer-core'
+import chromium from '@sparticuz/chromium'
 import fse from 'fs-extra'
 import path from 'path'
 import crypto from 'crypto'
@@ -57,7 +58,12 @@ const renderPages = async () => {
       ...extraPages
     ]
 
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless
+    });
     const page = await browser.newPage();
 
     await page.setUserAgent('puppeteer');
