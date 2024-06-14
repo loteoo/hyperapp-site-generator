@@ -15,7 +15,7 @@
     "fs-extra": "^11.2.0",
     "hyperapp": "^2.0.22",
     "path-to-regexp": "^6.2.2",
-    "puppeteer": "^22.0.11",
+    "puppeteer-core": "^22.0.11",
     "replace-in-file": "^7.2.0",
     "serve-handler": "^6.1.5",
     "yargs": "^17.7.2"

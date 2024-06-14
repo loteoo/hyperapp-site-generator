@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer'
+import puppeteer from 'puppeteer-core'
 import fse from 'fs-extra'
 import path from 'path'
 import crypto from 'crypto'
