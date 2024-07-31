@@ -1,44 +1,21 @@
 {
-  "version": "2.1.1",
   "name": "hyperstatic",
-  "description": "Hyperapp static site framework",
-  "author": "Alexandre Lotte",
-  "license": "MIT",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "version": "4.0.0",
+  "description": "",
+  "main": "src",
   "scripts": {
-    "build": "tsc",
-    "prepublish": "tsc",
-    "test": "echo \"No test specified\""
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "author": "Alexandre Lotte <dev@alexlotte.ca>",
+  "license": "ISC",
   "dependencies": {
-    "fs-extra": "^9.1.0",
-    "hyperapp": "^2.0.18",
-    "path-to-regexp": "^6.2.0",
-    "puppeteer": "^7.1.0",
-    "replace-in-file": "^6.2.0",
-    "serve-handler": "^6.1.3",
-    "yargs": "^16.2.0"
+    "hyperapp": "^2.0.22",
+    "hyperapp-render": "^4.0.1",
+    "vike": "^0.4.182",
+    "vite": "^5.3.5"
   },
   "devDependencies": {
-    "@types/node": "^14.14.28",
-    "@types/yargs": "^16.0.0",
-    "typescript": "^4.2.4"
-  },
-  "bin": {
-    "hyperstatic": "./cli.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/loteoo/hyperstatic.git"
-  },
-  "keywords": [
-    "hyperapp",
-    "framework",
-    "static-site-generator"
-  ],
-  "bugs": {
-    "url": "https://github.com/loteoo/hyperstatic/issues"
-  },
-  "homepage": "https://hyperstatic.dev"
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.4"
+  }
 }
